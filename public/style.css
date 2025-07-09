@@ -1,0 +1,18 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.controls {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+}
