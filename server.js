@@ -8,12 +8,12 @@ const wss = new WebSocket.Server({ server });
 
 app.use(express.static('public'));
 
-let drawHistory = []; // 💾 Guardar trazos
+let drawHistory = []; // Guardar trazos
 
 wss.on('connection', ws => {
-    console.log('Nuevo cliente conectado');
+    console.log('✅ Nuevo cliente conectado');
 
-    // 1️⃣ Enviar historial completo al nuevo cliente
+    // Enviar historial solo al nuevo cliente
     if (drawHistory.length > 0) {
         ws.send(JSON.stringify(drawHistory));
     }
@@ -21,17 +21,17 @@ wss.on('connection', ws => {
     ws.on('message', message => {
         const parsed = JSON.parse(message);
 
-        // 2️⃣ Guardar en historial si es un trazo
         if (parsed.type === 'draw') {
             drawHistory.push(parsed);
+            console.log(`🖊️ Dibujo recibido: de (${parsed.fromX}, ${parsed.fromY}) a (${parsed.toX}, ${parsed.toY}) con color ${parsed.color}`);
         }
 
-        // 3️⃣ Si es limpieza, limpiar el historial
         if (parsed.type === 'clear') {
             drawHistory = [];
+            console.log('🧼 Pizarra limpiada');
         }
 
-        // 4️⃣ Enviar a todos los demás clientes
+        // Retransmitir a todos excepto al emisor
         wss.clients.forEach(client => {
             if (client !== ws && client.readyState === WebSocket.OPEN) {
                 client.send(message);
@@ -40,9 +40,9 @@ wss.on('connection', ws => {
     });
 
     ws.on('close', () => {
-        console.log('Cliente desconectado');
+        console.log('❌ Cliente desconectado');
     });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));

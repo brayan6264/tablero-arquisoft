@@ -7,33 +7,54 @@ let drawing = false;
 let color = '#000000';
 let lastX = 0;
 let lastY = 0;
+let alreadyLoadedHistory = false;
 
-// Conexión WebSocket al servidor
+// WebSocket seguro para HTTPS
 const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
 const ws = new WebSocket(`${protocol}://${window.location.host}`);
 
-// Recibir mensajes de otros usuarios
-ws.onmessage = ({ data }) => {
-  const msg = JSON.parse(data);
-  if (msg.type === 'draw') drawLine(msg);
-  if (msg.type === 'clear') clearCanvas(false);
+ws.onopen = () => {
+  console.log('✅ WebSocket conectado');
 };
 
-// Detectar inicio de dibujo
+ws.onerror = (e) => {
+  console.error('❌ WebSocket error:', e);
+};
+
+ws.onclose = () => {
+  console.warn('⚠️ WebSocket cerrado');
+};
+ws.onmessage = ({ data }) => {
+  try {
+    const parsed = JSON.parse(data);
+    console.log('📩 Mensaje recibido:', parsed);
+
+    if (Array.isArray(parsed) && !alreadyLoadedHistory) {
+      parsed.forEach(msg => {
+        if (msg.type === 'draw') drawLine(msg);
+        if (msg.type === 'clear') clearCanvas(false);
+      });
+      alreadyLoadedHistory = true;
+    }
+
+    // ⚠️ Este bloque DEBE ejecutarse siempre para mensajes individuales
+    if (!Array.isArray(parsed)) {
+      if (parsed.type === 'draw') drawLine(parsed);
+      if (parsed.type === 'clear') clearCanvas(false);
+    }
+  } catch (e) {
+    console.error('Error al parsear:', e);
+  }
+};
+
 canvas.addEventListener('mousedown', e => {
   drawing = true;
   [lastX, lastY] = [e.clientX, e.clientY];
 });
 
-canvas.addEventListener('mouseup', () => {
-  drawing = false;
-});
+canvas.addEventListener('mouseup', () => drawing = false);
+canvas.addEventListener('mouseleave', () => drawing = false);
 
-canvas.addEventListener('mouseleave', () => {
-  drawing = false;
-});
-
-// Enviar trazos normalizados
 canvas.addEventListener('mousemove', e => {
   if (!drawing) return;
 
@@ -49,14 +70,13 @@ canvas.addEventListener('mousemove', e => {
     color: color
   };
 
-  drawLine(msg);  // dibujar localmente
-  ws.send(JSON.stringify(msg));  // enviar a los demás
-
+  drawLine(msg);
+  ws.send(JSON.stringify(msg));
   [lastX, lastY] = [newX, newY];
 });
 
-// Dibujar línea desde coordenadas relativas
 function drawLine({ fromX, fromY, toX, toY, color }) {
+  console.log(`🖌️ Dibujando de (${fromX}, ${fromY}) a (${toX}, ${toY}) con color ${color}`);
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -65,20 +85,15 @@ function drawLine({ fromX, fromY, toX, toY, color }) {
   ctx.stroke();
 }
 
-// Limpiar el canvas local y enviar evento a los demás
 function clearCanvas(send = true) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (send) {
-    ws.send(JSON.stringify({ type: 'clear' }));
-  }
+  if (send) ws.send(JSON.stringify({ type: 'clear' }));
 }
 
-// Cambiar el color desde el picker
 document.getElementById('colorPicker').addEventListener('input', e => {
   color = e.target.value;
 });
 
-// Descargar imagen como PNG
 function downloadCanvas() {
   const link = document.createElement('a');
   link.download = 'pizarron.png';
@@ -86,8 +101,5 @@ function downloadCanvas() {
   link.click();
 }
 
-// Exponer funciones para los botones
 window.clearCanvas = clearCanvas;
 window.downloadCanvas = downloadCanvas;
-
-
