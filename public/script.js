@@ -9,7 +9,8 @@ let lastX = 0;
 let lastY = 0;
 
 // Conexión WebSocket al servidor
-const ws = new WebSocket(`ws://${window.location.host}`);
+const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+const ws = new WebSocket(`${protocol}://${window.location.host}`);
 
 // Recibir mensajes de otros usuarios
 ws.onmessage = ({ data }) => {
