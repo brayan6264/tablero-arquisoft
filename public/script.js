@@ -13,20 +13,19 @@ let alreadyLoadedHistory = false;
 const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
 const ws = new WebSocket(`${protocol}://${window.location.host}`);
 
-ws.onopen = () => {
-  console.log('✅ WebSocket conectado');
-};
-
-ws.onerror = (e) => {
-  console.error('❌ WebSocket error:', e);
-};
-
-ws.onclose = () => {
-  console.warn('⚠️ WebSocket cerrado');
-};
-ws.onmessage = ({ data }) => {
+ws.onmessage = async ({ data }) => {
   try {
-    const parsed = JSON.parse(data);
+    let jsonString;
+
+    if (data instanceof Blob) {
+      jsonString = await data.text(); // <- 👈 convierte el Blob a texto
+    } else if (typeof data === 'string') {
+      jsonString = data;
+    } else {
+      jsonString = data.toString(); // fallback para Node local
+    }
+
+    const parsed = JSON.parse(jsonString);
     console.log('📩 Mensaje recibido:', parsed);
 
     if (Array.isArray(parsed) && !alreadyLoadedHistory) {
@@ -37,13 +36,13 @@ ws.onmessage = ({ data }) => {
       alreadyLoadedHistory = true;
     }
 
-    // ⚠️ Este bloque DEBE ejecutarse siempre para mensajes individuales
     if (!Array.isArray(parsed)) {
       if (parsed.type === 'draw') drawLine(parsed);
       if (parsed.type === 'clear') clearCanvas(false);
     }
+
   } catch (e) {
-    console.error('Error al parsear:', e);
+    console.error('❌ Error al parsear:', data, e);
   }
 };
 
