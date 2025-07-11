@@ -139,3 +139,35 @@ const defaultBtn = document.querySelector('.color-btn[data-color="#000000"]');
 if (defaultBtn) {
   selectColor(defaultBtn, '#000000');
 }
+// Manejo táctil
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault(); // evita scroll en móviles
+  drawing = true;
+  const touch = e.touches[0];
+  [lastX, lastY] = [touch.clientX, touch.clientY];
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  if (!drawing) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+
+  const newX = touch.clientX;
+  const newY = touch.clientY;
+
+  const msg = {
+    type: 'draw',
+    fromX: lastX / canvas.width,
+    fromY: lastY / canvas.height,
+    toX: newX / canvas.width,
+    toY: newY / canvas.height,
+    color: color
+  };
+
+  drawLine(msg);
+  ws.send(JSON.stringify(msg));
+  [lastX, lastY] = [newX, newY];
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => drawing = false);
+canvas.addEventListener('touchcancel', () => drawing = false);
