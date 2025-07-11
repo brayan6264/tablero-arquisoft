@@ -11,7 +11,7 @@ app.use(express.static('public'));
 let drawHistory = []; // Guardar trazos
 
 wss.on('connection', ws => {
-    console.log('✅ Nuevo cliente conectado');
+    console.log('Nuevo cliente conectado');
 
     // Enviar historial solo al nuevo cliente
     if (drawHistory.length > 0) {
@@ -23,12 +23,11 @@ wss.on('connection', ws => {
 
         if (parsed.type === 'draw') {
             drawHistory.push(parsed);
-            console.log(`🖊️ Dibujo recibido: de (${parsed.fromX}, ${parsed.fromY}) a (${parsed.toX}, ${parsed.toY}) con color ${parsed.color}`);
         }
 
         if (parsed.type === 'clear') {
             drawHistory = [];
-            console.log('🧼 Pizarra limpiada');
+            console.log('Pizarra limpiada');
         }
 
         // Retransmitir a todos excepto al emisor
@@ -40,9 +39,9 @@ wss.on('connection', ws => {
     });
 
     ws.on('close', () => {
-        console.log('❌ Cliente desconectado');
+        console.log('Cliente desconectado');
     });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));
+server.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));

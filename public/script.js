@@ -4,12 +4,11 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 let drawing = false;
-let color = '#000000';
+let color = '#000000'; // color por defecto
 let lastX = 0;
 let lastY = 0;
 let alreadyLoadedHistory = false;
 
-// WebSocket seguro para HTTPS
 const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
 const ws = new WebSocket(`${protocol}://${window.location.host}`);
 
@@ -18,15 +17,14 @@ ws.onmessage = async ({ data }) => {
     let jsonString;
 
     if (data instanceof Blob) {
-      jsonString = await data.text(); // <- 👈 convierte el Blob a texto
+      jsonString = await data.text();
     } else if (typeof data === 'string') {
       jsonString = data;
     } else {
-      jsonString = data.toString(); // fallback para Node local
+      jsonString = data.toString();
     }
 
     const parsed = JSON.parse(jsonString);
-    console.log('📩 Mensaje recibido:', parsed);
 
     if (Array.isArray(parsed) && !alreadyLoadedHistory) {
       parsed.forEach(msg => {
@@ -89,10 +87,6 @@ function clearCanvas(send = true) {
   if (send) ws.send(JSON.stringify({ type: 'clear' }));
 }
 
-document.getElementById('colorPicker').addEventListener('input', e => {
-  color = e.target.value;
-});
-
 function downloadCanvas() {
   const link = document.createElement('a');
   link.download = 'pizarron.png';
@@ -102,3 +96,46 @@ function downloadCanvas() {
 
 window.clearCanvas = clearCanvas;
 window.downloadCanvas = downloadCanvas;
+
+// Color picker personalizado y selección visual
+const colorButtons = document.querySelectorAll('.color-btn');
+const customColorBtn = document.getElementById('customColorBtn');
+const hiddenColorInput = document.getElementById('hiddenColorInput');
+
+function selectColor(button, selectedColor) {
+  color = selectedColor;
+
+  // Quitar clase 'selected' de todos los botones
+  colorButtons.forEach(btn => btn.classList.remove('selected'));
+
+  // Marcar el botón activo
+  button.classList.add('selected');
+}
+
+// Asignar a los botones predefinidos
+colorButtons.forEach(button => {
+  const colorValue = button.getAttribute('data-color');
+  if (colorValue) {
+    button.addEventListener('click', () => {
+      selectColor(button, colorValue);
+    });
+  }
+});
+
+// Botón personalizado
+customColorBtn.addEventListener('click', () => {
+  hiddenColorInput.click();
+});
+
+hiddenColorInput.addEventListener('input', (e) => {
+  const selectedCustomColor = e.target.value;
+  selectColor(customColorBtn, selectedCustomColor);
+  customColorBtn.style.backgroundColor = selectedCustomColor;
+  customColorBtn.style.border = '2px solid #000';
+});
+
+// Establecer negro como color inicial
+const defaultBtn = document.querySelector('.color-btn[data-color="#000000"]');
+if (defaultBtn) {
+  selectColor(defaultBtn, '#000000');
+}

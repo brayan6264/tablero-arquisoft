@@ -4,14 +4,26 @@
     <meta charset="UTF-8">
     <title>Pizarrón Virtual</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <canvas id="board"></canvas>
     <div class="controls">
-        <input type="color" id="colorPicker" />
-        <button onclick="clearCanvas()">Limpiar</button>
-        <button onclick="downloadCanvas()">Descargar</button>
-    </div>
+        <div class="controls">
+    <div class="color-options">
+        <button class="color-btn" style="background-color: black;" data-color="#000000"></button>
+        <button class="color-btn" style="background-color: red;" data-color="#ff0000"></button>
+        <button class="color-btn" style="background-color: blue;" data-color="#0000ff"></button>
+        <button class="color-btn" style="background-color: green;" data-color="#00ff00"></button>
+        <button class="color-btn" style="background-color: orange;" data-color="#ffa500"></button>
+        <button class="color-btn" style="background-color: purple;" data-color="#800080"></button>
+        <button class="color-btn custom-picker" id="customColorBtn" title="Elige otro color">🎨</button>
+    <input type="color" id="hiddenColorInput" style="display:none;" />
+</div>
+
+    <button class="btn" onclick="clearCanvas()">🧹 Limpiar</button>
+    <button class="btn" onclick="downloadCanvas()">💾 Descargar</button>
+</div>
     <script src="script.js"></script>
 </body>
 </html>
